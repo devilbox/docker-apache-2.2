@@ -121,11 +121,67 @@ log "info" "Docker date set to: $(date)"
 
 
 
+###
+### Prepare PHP-FPM
+###
+if ! set | grep '^PHP_FPM_ENABLE=' >/dev/null 2>&1; then
+	log "info" "\$PHP_FPM_ENABLE not set. PHP-FPM support disabled."
+else
+	if [ "${PHP_FPM_ENABLE}" = "1" ]; then
+
+		# PHP-FPM address
+		if ! set | grep '^PHP_FPM_SERVER_ADDR=' >/dev/null 2>&1; then
+			log "err" "PHP-FPM enabled, but \$PHP_FPM_SERVER_ADDR not set."
+			exit 1
+		fi
+		if [ "${PHP_FPM_SERVER_ADDR}" = "" ]; then
+			log "err" "PHP-FPM enabled, but \$PHP_FPM_SERVER_ADDR is empty."
+			exit 1
+		fi
+
+		# PHP-FPM port
+		if ! set | grep '^PHP_FPM_SERVER_PORT=' >/dev/null 2>&1; then
+			log "err" "PHP-FPM enabled, but \$PHP_FPM_SERVER_PORT not set."
+			exit 1
+		fi
+		if [ "${PHP_FPM_SERVER_PORT}" = "" ]; then
+			log "err" "PHP-FPM enabled, but \$PHP_FPM_SERVER_PORT is empty."
+			exit 1
+		fi
+
+		PHP_FPM_CONFIG="/etc/httpd/conf.d/php-fpm.conf"
+		PHP_FPM_HANDLER="/usr/local/bin/php-fcgi"
+
+		# Enable
+		log "info" "Enabling PHP-FPM at: ${PHP_FPM_SERVER_ADDR}:${PHP_FPM_SERVER_PORT}"
+		runsu "echo '#### PHP-FPM config ####' > ${PHP_FPM_CONFIG}"
+		runsu "echo '' >> ${PHP_FPM_CONFIG}"
+		runsu "echo 'AddType application/x-httpd-fastphp5 .php' >> ${PHP_FPM_CONFIG}"
+		runsu "echo 'Action application/x-httpd-fastphp5 /php5-fcgi' >> ${PHP_FPM_CONFIG}"
+		runsu "echo 'Alias /php5-fcgi ${PHP_FPM_HANDLER}' >> ${PHP_FPM_CONFIG}"
+		runsu "echo 'FastCgiExternalServer ${PHP_FPM_HANDLER} -host ${PHP_FPM_SERVER_ADDR}:${PHP_FPM_SERVER_PORT} -pass-header Authorization' >> ${PHP_FPM_CONFIG}"
 
 
-##
-## Add new Apache configuration dir
-##
+		PHP_FPM_HANDLER_DIR="$( dirname "${PHP_FPM_HANDLER}" )"
+		if [ ! -d "${PHP_FPM_HANDLER_DIR}" ]; then
+			run "mkdir -p ${PHP_FPM_HANDLER_DIR} )"
+		fi
+		runsu "echo '#!/bin/sh' > ${PHP_FPM_HANDLER}"
+		runsu "echo '' >> ${PHP_FPM_HANDLER}"
+		runsu "echo 'PHPRC=/etc/' >> ${PHP_FPM_HANDLER}"
+		runsu "echo '#PHPRC=\"/etc/php.ini\"' >> ${PHP_FPM_HANDLER}"
+		runsu "echo 'export PHPRC' >> ${PHP_FPM_HANDLER}"
+		runsu "echo 'export PHP_FCGI_MAX_REQUESTS=5000' >> ${PHP_FPM_HANDLER}"
+		runsu "echo 'export PHP_FCGI_CHILDREN=8' >> ${PHP_FPM_HANDLER}"
+		runsu "echo 'exec /usr/bin/php-cgi' >> ${PHP_FPM_HANDLER}"
+	fi
+fi
+
+
+
+###
+### Add new Apache configuration dir
+###
 if ! set | grep '^CUSTOM_HTTPD_CONF_DIR='  >/dev/null 2>&1; then
 	log "info" "\$CUSTOM_HTTPD_CONF_DIR not set. No custom include directory added."
 else
