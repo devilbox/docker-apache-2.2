@@ -103,20 +103,16 @@ else
 	run "rm -rf /etc/httpd/conf.d/*"
 fi
 
-# Basics (to be close to Apache 2.4)
-run "echo 'LoadModule authn_dbd_module modules/mod_authn_dbd.so'	> /etc/httpd/conf.d/cytopia-basics.conf"
-run "echo 'LoadModule dbd_module modules/mod_dbd.so'				>> /etc/httpd/conf.d/cytopia-basics.conf"
-run "echo 'LoadModule dumpio_module modules/mod_dumpio.so'			>> /etc/httpd/conf.d/cytopia-basics.conf"
-run "echo 'LoadModule filter_module modules/mod_filter.so'			>> /etc/httpd/conf.d/cytopia-basics.conf"
-run "echo 'LoadModule reqtimeout_module modules/mod_reqtimeout.so'	>> /etc/httpd/conf.d/cytopia-basics.conf"
-run "echo 'LoadModule unique_id_module modules/mod_unique_id.so'	>> /etc/httpd/conf.d/cytopia-basics.conf"
-# PHP
-run "echo 'LoadModule php5_module modules/libphp5.so' > /etc/httpd/conf.d/cytopia-php.conf"
-# Proxy FCGI (for PHP-FPM)
-run "echo 'LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so' > /etc/httpd/conf.d/cytopia-proxy.conf"
-run "echo 'LoadModule proxy_scgi_module modules/mod_proxy_scgi.so' >> /etc/httpd/conf.d/cytopia-proxy.conf"
-# XSendfile
-run "echo 'LoadModule xsendfile_module modules/mod_xsendfile.so' > /etc/httpd/conf.d/cytopia-xsendfile.conf"
+# Apache 2.2 specific (make it like apache 2.4)
+if [ ! -d "/etc/httpd/conf.modules.d/" ]; then
+	run "mkdir -p /etc/httpd/conf.modules.d/"
+else
+	run "rm -rf /etc/httpd/conf.modules.d/*"
+fi
+
+# Add Include directory (replace conf.d with conf.modules.d and add conf.d to the bottom)
+run "sed -i'' 's|conf.d|conf.modules.d|g' ${HTTPD_CONF}"
+run "echo 'Include conf.d/*.conf' >> ${HTTPD_CONF}"
 
 
 # User and Group
@@ -126,6 +122,108 @@ run "sed -i'' 's/^Group[[:space:]]*=.*$/Group = ${MY_GROUP}/g' ${HTTPD_CONF}"
 # Listen and ServerName
 run "sed -i'' 's/^Listen[[:space:]].*$/Listen 0.0.0.0:80/g' ${HTTPD_CONF}"
 run "sed -i'' 's/^#ServerName[[:space:]].*$/ServerName localhost:80/g' ${HTTPD_CONF}"
+
+
+# Basics Modules (to be close to Apache 2.4)
+run "echo 'LoadModule authn_dbd_module modules/mod_authn_dbd.so'	>  /etc/httpd/conf.modules.d/cytopia-basics.conf"
+run "echo 'LoadModule dbd_module modules/mod_dbd.so'				>> /etc/httpd/conf.modules.d/cytopia-basics.conf"
+run "echo 'LoadModule dumpio_module modules/mod_dumpio.so'			>> /etc/httpd/conf.modules.d/cytopia-basics.conf"
+run "echo 'LoadModule filter_module modules/mod_filter.so'			>> /etc/httpd/conf.modules.d/cytopia-basics.conf"
+run "echo 'LoadModule reqtimeout_module modules/mod_reqtimeout.so'	>> /etc/httpd/conf.modules.d/cytopia-basics.conf"
+run "echo 'LoadModule unique_id_module modules/mod_unique_id.so'	>> /etc/httpd/conf.modules.d/cytopia-basics.conf"
+# PHP
+run "echo 'LoadModule php5_module modules/libphp5.so'				>  /etc/httpd/conf.modules.d/cytopia-php.conf"
+# Proxy FCGI (for PHP-FPM)
+run "echo 'LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so'	>  /etc/httpd/conf.modules.d/cytopia-proxy.conf"
+run "echo 'LoadModule proxy_scgi_module modules/mod_proxy_scgi.so'	>> /etc/httpd/conf.modules.d/cytopia-proxy.conf"
+# XSendfile
+run "echo 'LoadModule xsendfile_module modules/mod_xsendfile.so'	>  /etc/httpd/conf.modules.d/cytopia-xsendfile.conf"
+
+
+
+# Add Custom http Configuration
+{
+	echo "CustomLog \"/var/log/httpd/access_log\" combined";
+	echo "ErrorLog \"/var/log/httpd/error_log\"";
+	echo "LogLevel warn";
+	echo;
+
+	echo "AddDefaultCharset UTF-8";
+	echo;
+
+	echo "HostnameLookups Off";
+	echo;
+
+	echo "Timeout 60";
+	echo "KeepAlive On";
+	echo "KeepAliveTimeout 10";
+	echo "MaxKeepAliveRequests 100";
+	echo;
+
+	echo "EnableMMAP Off";
+	echo "EnableSendfile Off";
+	echo;
+
+	echo "XSendFile On";
+	echo "XSendFilePath /var/www/html";
+	echo;
+
+} > "/etc/httpd/conf.d/http-defaults.conf"
+
+
+# Add Default vhost Configuration
+{
+	echo "NameVirtualHost *:80";
+	echo;
+
+	echo "<VirtualHost _default_:80>";
+	echo "    ServerName  localhost";
+	echo "    ServerAdmin root@localhost";
+	echo;
+
+	echo "    ErrorLog  /var/log/httpd/localhost-error.log";
+	echo "    CustomLog /var/log/httpd/localhost-access.log combined";
+	echo;
+
+	echo "    DirectoryIndex index.html index.htm index.php";
+	echo;
+
+	echo "    DocumentRoot \"/var/www/html\"";
+	echo;
+
+	echo "    <Directory \"/var/www/html\">";
+	echo "        DirectoryIndex index.html index.htm index.php";
+	echo;
+
+	echo "        AllowOverride All";
+	echo "        Options All";
+	echo;
+
+	echo "        RewriteEngine on";
+	echo "        RewriteBase /";
+	echo;
+
+	echo "        Order allow,deny";
+	echo "        Allow from all";
+	echo "    </Directory>";
+	echo "</VirtualHost>";
+	echo;
+
+} > "/etc/httpd/conf.d/localhost.conf"
+
+# Add test Page
+if [ ! -d "/var/www/html" ]; then
+	run "mkdir -p /var/www/html"
+else
+	run "rm -rf /var/www/html/*"
+fi
+run "echo '<?php phpversion(); ?>' > /var/www/html/index.php"
+run "echo 'It works' > /var/www/html/index.html"
+run "chown -R ${MY_USER}:${MY_GROUP} /var/www/html"
+
+
+
+
 
 
 
@@ -172,7 +270,7 @@ run "yum -y remove \
 run "yum -y remove httpd-devel"
 run "rm -rf /tmp/mod_fastcgi-2.4.7*"
 
-run "echo 'LoadModule fastcgi_module modules/mod_fastcgi.so' > /etc/httpd/conf.d/cytopia-fastcgi.conf"
+run "echo 'LoadModule fastcgi_module modules/mod_fastcgi.so' > /etc/httpd/conf.modules.d/cytopia-fastcgi.conf"
 
 
 
