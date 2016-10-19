@@ -28,7 +28,7 @@ install:
   - mkdir -p ~/www
   - echo "Static Html" > ~/www/index.html
   - echo "<?php echo 'Helo world'; ?>" > ~/www/index.php
-  - echo "<?php echo mysqli_connect('localhost', 'root', '') ? 'YES' : 'NO'; ?>" > ~/www/mysql.php
+  - echo "<?php if (mysqli_connect('localhost', 'root', '') echo 'YES'; else echo 'NO';" > ~/www/mysql.php
 
 
 
