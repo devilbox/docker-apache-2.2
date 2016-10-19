@@ -40,6 +40,8 @@ script:
   ## Test plain docker
   ##
   - docker run -d -p 127.0.0.1:80:80 --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME}
+  - docker ps
+  - sleep 5
 
   - curl localhost
   - curl localhost | grep 'It works'
@@ -53,6 +55,8 @@ script:
   ## Test docker with external mounted directory
   ##
   - docker run -d -p 127.0.0.1:80:80 -v ~/www:/var/www/html --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME}
+  - docker ps
+  - sleep 5
 
   - curl localhost
   - curl localhost | grep 'Static Html'
@@ -69,12 +73,19 @@ script:
   ##
   - docker run -d -p 9000 -v ~/www:/var/www/html --name php cytopia/php-fpm-5.6
   - docker run -d -p 127.0.0.1:80:80 -v ~/www:/var/www/html -e PHP_FPM_ENABLE=1 -e PHP_FPM_SERVER_ADDR=php -e PHP_FPM_SERVER_PORT=9000 --link php --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME}
+  - docker ps
+  - sleep 5
 
   - curl localhost
   - curl localhost | grep 'Static Html'
 
   - curl http://localhost/index.php
   - curl http://localhost/index.php | grep '<?php' && exit 1
+
+  - docker stop "$( docker ps | grep  "php" | awk '{print $1}' )"
+  - docker stop "$( docker ps | grep  "${MY_DOCKER_NAME}" | awk '{print $1}' )"
+  - docker rm "php"
+  - docker rm "${MY_DOCKER_NAME}"
 
 
   #- python tests.py
