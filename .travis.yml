@@ -1,8 +1,6 @@
 env:
   global:
     - MY_DOCKER_NAME="apache-2.2"
-    - DOCKER_NAME=apache-2.2
-    - T_DOCKER_NAME=apache-2.2 a
 
 
 language: python
@@ -13,7 +11,7 @@ services:
   - docker
 
 install:
-  - docker build -t cytopia/apache-2.2 .
+  - docker build -t cytopia/${MY_DOCKER_NAME} .
 
 #before_script:
 #  - pip install -r requirements.txt
@@ -24,24 +22,14 @@ install:
 script:
 
   # Test plain
-  - docker run -d -p 127.0.0.1:80:80 --name apache-2.2 cytopia/apache-2.2
-  - docker ps | grep -q apache-2.2
+  - docker run -d -p 127.0.0.1:80:80 --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME}
+  - docker ps | grep -q "${MY_DOCKER_NAME}"
 
   - sleep 5
   - curl localhost
   - curl localhost | grep 'It works'
-  - docker stop "$( docker ps | grep  apache-2.2 | awk '{print $1}' )"
+  - docker stop "$( docker ps | grep  "${MY_DOCKER_NAME}" | awk '{print $1}' )"
+  - docker rm "${MY_DOCKER_NAME}"
 
-  - echo $MY_DOCKER_NAME
-  - echo "$MY_DOCKER_NAME"
-  - echo "${MY_DOCKER_NAME}"
-
-  - echo $DOCKER_NAME
-  - echo "$DOCKER_NAME"
-  - echo "${DOCKER_NAME}"
-
-  - echo $T_DOCKER_NAME
-  - echo "$T_DOCKER_NAME"
-  - echo "${T_DOCKER_NAME}"
 
   #- python tests.py
