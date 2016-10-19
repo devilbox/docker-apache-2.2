@@ -190,10 +190,7 @@ if ! set | grep '^CUSTOM_HTTPD_CONF_DIR='  >/dev/null 2>&1; then
 else
 	# Tell apache to also look into this custom dir for configuratoin
 	log "info" "Adding custom include directory: ${CUSTOM_HTTPD_CONF_DIR}"
-	runsu "echo 'Include ${CUSTOM_HTTPD_CONF_DIR}/*.conf' >> /etc/httpd/conf/httpd.conf"
-
 	runsu "sed -i'' 's|^Include[[:space:]]*conf\.d/.*$|Include ${CUSTOM_HTTPD_CONF_DIR}/*.conf|g' ${HTTPD_CONF}"
-
 fi
 
 

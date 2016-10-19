@@ -1,3 +1,8 @@
+env:
+  global:
+    - MY_DOCKER_NAME=apache-2.2
+
+
 language: python
 python:
   - 2.7
@@ -7,7 +12,6 @@ services:
 
 install:
   - docker build -t cytopia/apache-2.2 .
-  - docker run -d -p 127.0.0.1:80:80 --name apache-2.4 cytopia/apache-2.2
 
 #before_script:
 #  - pip install -r requirements.txt
@@ -16,5 +20,16 @@ install:
 #  - pip install feedparser
 
 script:
+
+  # Test plain
+  - docker run -d -p 127.0.0.1:80:80 --name apache-2.2 cytopia/apache-2.2
   - docker ps | grep -q apache-2.2
+
+  - sleep 5
+  - curl localhost
+  - curl localhost | grep 'It works'
+  - docker stop "$( docker ps | grep  apache-2.2 | awk '{print $1}' )"
+  - echo $DOCKER_NAME
+
+
   #- python tests.py

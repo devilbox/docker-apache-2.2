@@ -16,7 +16,6 @@
 
 ----
 
-
 ## Options
 
 ### Environmental variables

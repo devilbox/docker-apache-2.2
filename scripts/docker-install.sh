@@ -89,11 +89,11 @@ run "yum -y install \
 
 
 
-##
-## Configure Apache
-##
-## (Remove all custom config)
-##
+###
+### Configure Apache
+###
+### (Remove all custom config)
+###
 print_headline "5. Configure Apache"
 
 # Clean all configs
