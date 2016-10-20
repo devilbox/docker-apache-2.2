@@ -28,7 +28,9 @@ install:
   - mkdir -p ~/www
   - echo "Static Html" > ~/www/index.html
   - echo "<?php echo 'Helo world'; ?>" > ~/www/index.php
-  - echo "<?php if (mysqli_connect('localhost', 'root', '')) { echo 'YES'; } else { echo 'NO'; }" > ~/www/mysql.php
+  - echo "<?php if (mysqli_connect('localhost', 'root', '')) { echo 'YES'; } else { echo 'NO'; }" > ~/www/mysql_loc.php
+  - echo "<?php if (mysqli_connect('127.0.0.1', 'root', '')) { echo 'YES'; } else { echo 'NO'; }" > ~/www/mysql_127.php
+  - echo "<?php if (mysqli_connect('mysql', 'root', '')) { echo 'YES'; } else { echo 'NO'; }" > ~/www/mysql_rem.php
 
 
 
@@ -104,8 +106,13 @@ script:
   - curl http://localhost/index.php
   - curl http://localhost/index.php | grep '<?php' && false || true
 
-  - curl http://localhost/mysql.php
-  - curl http://localhost/mysql.php | grep 'YES'
+  - curl http://localhost/mysql_loc.php
+  - curl http://localhost/mysql_127.php
+  - curl http://localhost/mysql_rem.php
+
+  - curl http://localhost/mysql_loc.php | grep 'YES'
+  - curl http://localhost/mysql_127.php | grep 'YES'
+  - curl http://localhost/mysql_rem.php | grep 'YES'
 
   - docker stop "$( docker ps | grep  "mysql" | awk '{print $1}' )"
   - docker stop "$( docker ps | grep  "php" | awk '{print $1}' )"
