@@ -24,15 +24,20 @@ env:
 install:
   - docker version
 
-  # Build docker and pull others
+  # Build my docker
   - docker build -t cytopia/${MY_DOCKER_NAME} .
+
+  # Pull docker dependencies
   - docker pull cytopia/php-fpm-5.6
   - docker pull cytopia/mysql-5.5
 
-  # Create directory with html and php files
+  # Create directories
   - mkdir -p ~/www
   - mkdir -p ~/tmp/host-mysql-sock
+  - chmod 777 ~/www
   - chmod 777 ~/tmp/host-mysql-sock
+
+  # Add html and php files
   - echo "Static Html" > ~/www/index.html
   - echo "<?php echo 'Helo world'; ?>" > ~/www/index.php
   - echo "<?php error_reporting(-1); ini_set('display_errors', 1); if (mysqli_connect('localhost', 'root', '')) { echo 'YES'; } else { echo 'NO ' . mysqli_connect_error(); }" > ~/www/mysql_loc.php
@@ -48,7 +53,7 @@ install:
 script:
 
   ##
-  ## Test plain docker
+  ## 01.) Test plain docker
   ##
   - docker run -d -p 127.0.0.1:80:80 --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME}
   - docker ps
@@ -63,7 +68,7 @@ script:
 
 
   ##
-  ## Test docker with external mounted directory
+  ## 02.) Test docker with external mounted directory
   ##
   - docker run -d -p 127.0.0.1:80:80 -v ~/www:/var/www/html --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME}
   - docker ps
@@ -80,7 +85,7 @@ script:
 
 
   ##
-  ## Test docker with external mounted directory and PHP-FPM support
+  ## 03.) Test docker with external mounted directory and PHP-FPM support
   ##
   - docker run -d
       -p 9000:9000
@@ -110,7 +115,7 @@ script:
 
 
   ##
-  ## Test docker with external mounted directory and PHP-FPM support and MySQL support
+  ## 04.) Test docker with external mounted directory and PHP-FPM support and MySQL support
   ##
   - docker network create -d bridge my_bridge && sleep 2
 
@@ -153,25 +158,22 @@ script:
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
   - sleep 15
 
+  # Show information
   - docker ps
   - docker network ls
   - docker network inspect my_bridge
 
+  # Test connectivity
+  - docker exec -ti php ping -c 1 mysql
+  - docker exec -ti ${MY_DOCKER_NAME} ping -c 1 mysql
 
-  # Test pinging
-  - docker exec -ti php ping -c 2 mysql
-  - docker exec -ti ${MY_DOCKER_NAME} ping -c 2 mysql
+  - docker exec -ti php ping -c 1 ${MY_DOCKER_NAME}
+  - docker exec -ti mysql ping -c 1 ${MY_DOCKER_NAME}
 
-  - docker exec -ti php ping -c 2 ${MY_DOCKER_NAME}
-  - docker exec -ti mysql ping -c 2 ${MY_DOCKER_NAME}
+  - docker exec -ti ${MY_DOCKER_NAME} ping -c 1 php
+  - docker exec -ti ${MY_DOCKER_NAME} ping -c 1 mysql
 
-  - docker exec -ti ${MY_DOCKER_NAME} ping -c 2 php
-  - docker exec -ti ${MY_DOCKER_NAME} ping -c 2 mysql
-
-
-  # Wait for dockers to initialize properly
-  - sleep 30
-
+  # Test webserver
   - curl localhost
   - curl localhost | grep 'Static Html'
 
@@ -188,9 +190,11 @@ script:
   - curl http://localhost/mysql_rem.php | grep 'YES'
   - curl http://localhost/mysql_ip.php | grep 'YES'
 
+  # Cleanup
   - docker stop "$( docker ps | grep  "mysql" | awk '{print $1}' )"
   - docker stop "$( docker ps | grep  "php" | awk '{print $1}' )"
   - docker stop "$( docker ps | grep  "${MY_DOCKER_NAME}" | awk '{print $1}' )"
   - docker rm "mysql"
   - docker rm "php"
   - docker rm "${MY_DOCKER_NAME}"
+  - docker network rm my_bridge
