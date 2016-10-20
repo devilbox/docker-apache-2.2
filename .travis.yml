@@ -118,7 +118,7 @@ script:
       -e MYSQL_SOCKET_DIR=/tmp/docker-mysql-sock
       -e MYSQL_ROOT_PASSWORD=
       --network=my_bridge
-      --name mysql cytopia/mysql-5.5 && sleep 5
+      --name mysql cytopia/mysql-5.5 && sleep 10
 
   # PHP
   - docker run -d
@@ -133,7 +133,7 @@ script:
       -e MYSQL_SOCKET_PATH=/tmp/docker-mysql-sock/mysqld.sock
       --network=my_bridge
       --link mysql
-      --name php cytopia/php-fpm-5.6 && sleep 5
+      --name php cytopia/php-fpm-5.6 && sleep 10
 
   # HTTP
   - docker run
@@ -145,11 +145,25 @@ script:
       --network=my_bridge
       --link php
       --link mysql
-      --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME}
+      --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} && sleep 10
 
   - docker ps
   - docker network ls
   - docker network inspect my_bridge
+
+
+  # Test pinging
+  - docker exec -ti php ping -c 2 mysql
+  - docker exec -ti ${MY_DOCKER_NAME} ping -c 2 mysql
+
+  - docker exec -ti php ping -c 2 ${MY_DOCKER_NAME}
+  - docker exec -ti mysql ping -c 2 ${MY_DOCKER_NAME}
+
+  - docker exec -ti ${MY_DOCKER_NAME} ping -c 2 php
+  - docker exec -ti ${MY_DOCKER_NAME} ping -c 2 mysql
+
+
+  # Wait for dockers to initialize properly
   - sleep 30
 
   - curl localhost
