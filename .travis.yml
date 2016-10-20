@@ -33,9 +33,9 @@ install:
   - mkdir -p ~/tmp/host-mysql-sock
   - echo "Static Html" > ~/www/index.html
   - echo "<?php echo 'Helo world'; ?>" > ~/www/index.php
-  - echo "<?php if (mysqli_connect('localhost', 'root', '')) { echo 'YES'; } else { echo 'NO'; }" > ~/www/mysql_loc.php
-  - echo "<?php if (mysqli_connect('127.0.0.1', 'root', '')) { echo 'YES'; } else { echo 'NO'; }" > ~/www/mysql_127.php
-  - echo "<?php if (mysqli_connect('mysql', 'root', '')) { echo 'YES'; } else { echo 'NO'; }" > ~/www/mysql_rem.php
+  - echo "<?php error_reporting(-1); ini_set('display_errors', 1); if (mysqli_connect('localhost', 'root', '')) { echo 'YES'; } else { echo 'NO ' . mysqli_connect_error(); }" > ~/www/mysql_loc.php
+  - echo "<?php error_reporting(-1); ini_set('display_errors', 1); if (mysqli_connect('127.0.0.1', 'root', '')) { echo 'YES'; } else { echo 'NO ' . mysqli_connect_error(); }" > ~/www/mysql_127.php
+  - echo "<?php error_reporting(-1); ini_set('display_errors', 1); if (mysqli_connect('mysql', 'root', ''))     { echo 'YES'; } else { echo 'NO ' . mysqli_connect_error(); }" > ~/www/mysql_rem.php
 
 
 
