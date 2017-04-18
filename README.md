@@ -1,5 +1,7 @@
 # Apache 2.2 Docker
 
+<small>**Latest build:** 2017-04-18</small>
+
 [![Build Status](https://travis-ci.org/cytopia/docker-apache-2.2.svg?branch=master)](https://travis-ci.org/cytopia/docker-apache-2.2) [![](https://images.microbadger.com/badges/version/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2") [![](https://images.microbadger.com/badges/image/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2") [![](https://images.microbadger.com/badges/license/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2")
 
 [![cytopia/apache-2.2](http://dockeri.co/image/cytopia/apache-2.2)](https://hub.docker.com/r/cytopia/apache-2.2/)
@@ -143,3 +145,13 @@ It allows any of the following combinations:
 * MySQL 5.5, MySQL 5.6, MySQL 5.7, MariaDB 5 and MariaDB 10
 * Apache 2.2, Apache 2.4, Nginx stable and Nginx mainline
 * And more to come...
+
+## Version
+
+```
+Server version: Apache/2.2.15 (Unix)
+Server built:   Mar 22 2017 06:52:55
+Server's Module Magic Number: 20051115:25
+Server loaded:  APR 1.3.9, APR-Util 1.3.9
+Server MPM:     Prefork
+```
