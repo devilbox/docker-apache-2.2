@@ -217,13 +217,19 @@ script:
       --name mysql cytopia/mysql-5.5 &
   - sleep 15
   # PHP
+  - mkdir -p /tmp/php.d
+  - (
+        echo "mysql.default_socket = ${MYSQL_SOCKET_DIR}/mysqld.sock"
+        echo "mysqli.default_socket = ${MYSQL_SOCKET_DIR}/mysqld.sock"
+        echo "pdo_mysql.default_socket = ${MYSQL_SOCKET_DIR}/mysqld.sock"
+    ) > /tmp/php.d/socket.ini
   - docker run
       -p 9000:9000
       -v ~/www:/var/www/html
       -v ~/tmp/host-mysql-sock:${MYSQL_SOCKET_DIR}
+      -v /tmp/php.d:/etc/php-custom.d
       -e DEBUG_COMPOSE_ENTRYPOINT=1
       -e "FORWARD_PORTS_TO_LOCALHOST=3306:mysql:3306"
-      -e MYSQL_SOCKET_PATH=${MYSQL_SOCKET_DIR}/mysqld.sock
       --network=my_bridge
       --link mysql
       --name php cytopia/php-fpm-5.6 &
@@ -296,13 +302,19 @@ script:
       --name mysql cytopia/mysql-5.5 &
   - sleep 15
   # PHP
+  - mkdir -p /tmp/php.d
+  - (
+        echo "mysql.default_socket = ${MYSQL_SOCKET_DIR}/mysqld.sock"
+        echo "mysqli.default_socket = ${MYSQL_SOCKET_DIR}/mysqld.sock"
+        echo "pdo_mysql.default_socket = ${MYSQL_SOCKET_DIR}/mysqld.sock"
+    ) > /tmp/php.d/socket.ini
   - docker run
       -p 9000:9000
       -v ~/www:/var/www/html
       -v ~/tmp/host-mysql-sock:${MYSQL_SOCKET_DIR}
+      -v /tmp/php.d:/etc/php-custom.d
       -e "FORWARD_PORTS_TO_LOCALHOST=3306:mysql:3306"
       -e MOUNT_MYSQL_SOCKET_TO_LOCALDISK=1
-      -e MYSQL_SOCKET_PATH=${MYSQL_SOCKET_DIR}/mysqld.sock
       --network=my_bridge
       --link mysql
       --name php cytopia/php-fpm-5.6 &
