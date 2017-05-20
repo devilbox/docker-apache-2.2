@@ -222,11 +222,7 @@ script:
       -v ~/www:/var/www/html
       -v ~/tmp/host-mysql-sock:${MYSQL_SOCKET_DIR}
       -e DEBUG_COMPOSE_ENTRYPOINT=1
-      -e FORWARD_MYSQL_PORT_TO_LOCALHOST=1
-      -e MYSQL_REMOTE_ADDR=mysql
-      -e MYSQL_REMOTE_PORT=3306
-      -e MYSQL_LOCAL_PORT=3306
-      -e MOUNT_MYSQL_SOCKET_TO_LOCALDISK=1
+      -e "FORWARD_PORTS_TO_LOCALHOST=3306:mysql:3306"
       -e MYSQL_SOCKET_PATH=${MYSQL_SOCKET_DIR}/mysqld.sock
       --network=my_bridge
       --link mysql
@@ -304,10 +300,7 @@ script:
       -p 9000:9000
       -v ~/www:/var/www/html
       -v ~/tmp/host-mysql-sock:${MYSQL_SOCKET_DIR}
-      -e FORWARD_MYSQL_PORT_TO_LOCALHOST=1
-      -e MYSQL_REMOTE_ADDR=mysql
-      -e MYSQL_REMOTE_PORT=3306
-      -e MYSQL_LOCAL_PORT=3306
+      -e "FORWARD_PORTS_TO_LOCALHOST=3306:mysql:3306"
       -e MOUNT_MYSQL_SOCKET_TO_LOCALDISK=1
       -e MYSQL_SOCKET_PATH=${MYSQL_SOCKET_DIR}/mysqld.sock
       --network=my_bridge
