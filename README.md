@@ -1,6 +1,6 @@
 # Apache 2.2 Docker
 
-<small>**Latest build:** 2017-05-21</small>
+<small>**Latest build:** 2017-06-30</small>
 
 [![Build Status](https://travis-ci.org/cytopia/docker-apache-2.2.svg?branch=master)](https://travis-ci.org/cytopia/docker-apache-2.2) [![](https://images.microbadger.com/badges/version/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2") [![](https://images.microbadger.com/badges/image/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2") [![](https://images.microbadger.com/badges/license/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2")
 
