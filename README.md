@@ -1,6 +1,6 @@
 # Apache 2.2 Docker
 
-<small>**Latest build:** 2017-06-30</small>
+<small>**Latest build:** 2017-08-30</small>
 
 [![Build Status](https://travis-ci.org/cytopia/docker-apache-2.2.svg?branch=master)](https://travis-ci.org/cytopia/docker-apache-2.2) [![](https://images.microbadger.com/badges/version/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2") [![](https://images.microbadger.com/badges/image/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2") [![](https://images.microbadger.com/badges/license/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2")
 
@@ -136,7 +136,7 @@ It allows any of the following combinations:
 
 ```
 Server version: Apache/2.2.15 (Unix)
-Server built:   Mar 22 2017 06:52:55
+Server built:   Aug 15 2017 19:44:58
 Server's Module Magic Number: 20051115:25
 Server loaded:  APR 1.3.9, APR-Util 1.3.9
 Server MPM:     Prefork
