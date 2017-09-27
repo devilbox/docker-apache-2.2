@@ -1,22 +1,22 @@
-# Apache 2.4 Docker
+# Apache 2.2 Docker
 
 [![Devilbox](https://raw.githubusercontent.com/cytopia/devilbox/master/.devilbox/www/htdocs/assets/img/devilbox_80.png)](https://github.com/cytopia/devilbox)
 
 <sub>This Docker image is part of the **[devilbox](https://github.com/cytopia/devilbox)**.</sub>
 
-**[Apache 2.2](https://github.com/cytopia/docker-apache-2.2) | Apache 2.4 | [Nginx stable](https://github.com/cytopia/docker-nginx-stable) | [Nginx mainline](https://github.com/cytopia/docker-nginx-mainline)**
+**Apache 2.2 | [Apache 2.4](https://github.com/cytopia/docker-apache-2.2) | [Nginx stable](https://github.com/cytopia/docker-nginx-stable) | [Nginx mainline](https://github.com/cytopia/docker-nginx-mainline)**
 
-[![Build Status](https://travis-ci.org/cytopia/docker-apache-2.4.svg?branch=master)](https://travis-ci.org/cytopia/docker-apache-2.4) [![](https://images.microbadger.com/badges/version/cytopia/apache-2.4.svg)](https://microbadger.com/images/cytopia/apache-2.4 "apache-2.4") [![](https://images.microbadger.com/badges/image/cytopia/apache-2.4.svg)](https://microbadger.com/images/cytopia/apache-2.4 "apache-2.4") [![](https://images.microbadger.com/badges/license/cytopia/apache-2.4.svg)](https://microbadger.com/images/cytopia/apache-2.4 "apache-2.4")
+[![Build Status](https://travis-ci.org/cytopia/docker-apache-2.2.svg?branch=master)](https://travis-ci.org/cytopia/docker-apache-2.2) [![](https://images.microbadger.com/badges/version/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2") [![](https://images.microbadger.com/badges/image/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2") [![](https://images.microbadger.com/badges/license/cytopia/apache-2.2.svg)](https://microbadger.com/images/cytopia/apache-2.2 "apache-2.2")
 
-This image is based on the official **[Apache 2.4](https://hub.docker.com/_/httpd)** Docker image and extends it with the ability to have **virtual hosts created automatically** when adding new directories. For that to work, it integrates two tools that will take care about the whole process: **[watcherd]()** and **[vhost-gen]()**.
+This image is based on the official **[Apache 2.2](https://hub.docker.com/_/httpd)** Docker image and extends it with the ability to have **virtual hosts created automatically** when adding new directories. For that to work, it integrates two tools that will take care about the whole process: **[watcherd]()** and **[vhost-gen]()**.
 
 From a users perspective, you mount your local project directory into the Docker under `/shared/httpd`. Any directory then created in your local project directory wil spawn a new virtual host by the same name. Additional settings such as custom server names, PHP-FPM or even different Apache templates per project are supported as well.
 
 ----
 
-Find me on **[Docker Hub](https://hub.docker.com/r/cytopia/apache-2.4)**:
+Find me on **[Docker Hub](https://hub.docker.com/r/cytopia/apache-2.2)**:
 
-[![cytopia/apache-2.4](http://dockeri.co/image/cytopia/apache-2.4)](https://hub.docker.com/r/cytopia/apache-2.4/)
+[![cytopia/apache-2.2](http://dockeri.co/image/cytopia/apache-2.2)](https://hub.docker.com/r/cytopia/apache-2.2/)
 
 <small>**Latest build:** 2017-09-27</small>
 
@@ -69,7 +69,7 @@ docker run -it \
     -e MASS_VHOST_DOCROOT=www \
     -e MASS_VHOST_TLD=.local \
     -v /local/path:/shared/httpd \
-    devilbox/apache-2.4
+    devilbox/apache-2.2
 ```
 
 #### Customization per virtual host
@@ -150,7 +150,7 @@ This Docker container adds a lot of injectables in order to customize it to your
 
 | Docker              | Description |
 |---------------------|-------------|
-| /etc/apache-2.4.d   | Mount this directory to add outside configuration files (`*.conf`) to Apache |
+| /etc/apache-2.2.d   | Mount this directory to add outside configuration files (`*.conf`) to Apache |
 | /var/www/default    | Apache default virtual host base path (contains by default `htdocs/` and `cfg/` |
 | /shared/httpd       | Apache mass virtual host root directory |
 
@@ -170,7 +170,7 @@ Mount your local directort `~/my-host-www` into the docker and server those file
 
 **Note:** Files will be server from `~/my-host-www/htdocs`.
 ```bash
-$ docker run -d -p 80:80 -v ~/my-host-www:/var/www/default -t cytopia/apache-2.4
+$ docker run -d -p 80:80 -v ~/my-host-www:/var/www/default -t cytopia/apache-2.2
 ```
 
 #### 2. Serve PHP files with PHP-FPM
@@ -193,7 +193,7 @@ $ docker run -d \
     -e PHP_FPM_SERVER_ADDR=php \
     -e PHP_FPM_SERVER_PORT=9000 \
     --link php \
-    -t cytopia/apache-2.4
+    -t cytopia/apache-2.2
 ```
 
 #### 3. Fully functional LEMP stack
@@ -228,7 +228,7 @@ $ docker run -d \
     -e PHP_FPM_SERVER_PORT=9000 \
     --link php \
     --link mysql \
-    -t cytopia/apache-2.4
+    -t cytopia/apache-2.2
 ```
 
 #### 4. Ultimate pre-configured docker-compose setup
