@@ -2,15 +2,15 @@ FROM httpd:2.2
 MAINTAINER "cytopia" <cytopia@everythingcli.org>
 
 
-##
-## Labels
-##
+###
+### Labels
+###
 LABEL \
 	name="cytopia's Apache 2.2 Image" \
 	image="apache-2.2" \
 	vendor="cytopia" \
 	license="MIT" \
-	build-date="2017-09-27"
+	build-date="2017-09-28"
 
 
 ###
@@ -20,6 +20,7 @@ LABEL \
 # required packages
 RUN set -x \
 	&& apt-get update \
+	&& apt-get upgrade -y \
 	&& apt-get install --no-install-recommends --no-install-suggests -y \
 		autoconf \
 		gcc \
@@ -64,6 +65,7 @@ RUN set -x \
 		gcc \
 		make \
 		wget \
+	&& apt-get autoremove -y \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& apt-get purge -y --auto-remove
 
@@ -73,17 +75,17 @@ RUN set -x \
 		echo "ServerName localhost"; \
 		echo "LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so"; \
 		echo "NameVirtualHost *:80"; \
-		echo "Include /etc/httpd/conf.d/*.conf"; \
-		echo "Include /etc/httpd/custom.d/*.conf"; \
-		echo "Include /etc/apache-2.2.d/*.conf"; \
 		echo "Include conf/extra/httpd-default.conf"; \
+		echo "Include /etc/httpd-custom.d/*.conf"; \
+		echo "Include /etc/httpd/conf.d/*.conf"; \
+		echo "Include /etc/httpd/vhost.d/*.conf"; \
 	) >> /usr/local/apache2/conf/httpd.conf
 
 # create directories
 RUN set -x \
-	&& mkdir -p /etc/apache-2.2.d \
+	&& mkdir -p /etc/httpd-custom.d \
 	&& mkdir -p /etc/httpd/conf.d \
-	&& mkdir -p /etc/httpd/custom.d \
+	&& mkdir -p /etc/httpd/vhost.d \
 	&& mkdir -p /var/www/default/htdocs \
 	&& mkdir -p /shared/httpd \
 	&& chmod 0775 /shared/httpd \
