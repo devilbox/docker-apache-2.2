@@ -99,6 +99,8 @@ RUN set -x \
 		echo "SSLSessionCache        \"shmcb:/usr/local/apache2/logs/ssl_scache(512000)\""; \
 		echo "SSLSessionCacheTimeout  300"; \
 		echo "SSLMutex  \"file:/usr/local/apache2/logs/ssl_mutex\""; \
+		\
+		echo "HTTPProtocolOptions unsafe"; \
 	) >> /usr/local/apache2/conf/httpd.conf
 
 # create directories
