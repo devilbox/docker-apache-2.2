@@ -1,6 +1,11 @@
 FROM httpd:2.2
 MAINTAINER "cytopia" <cytopia@everythingcli.org>
 
+LABEL \
+	name="cytopia's apache 2.2 image" \
+	image="devilbox/apache-2.2" \
+	vendor="devilbox" \
+	license="MIT"
 
 ###
 ### Build arguments
