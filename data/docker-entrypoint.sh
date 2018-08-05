@@ -82,7 +82,7 @@ export_docker_logs "DOCKER_LOGS" "${DEBUG_LEVEL}"
 export_php_fpm_enable "PHP_FPM_ENABLE" "${DEBUG_LEVEL}"
 export_php_fpm_server_addr "PHP_FPM_SERVER_ADDR" "${DEBUG_LEVEL}"
 export_php_fpm_server_port "PHP_FPM_SERVER_PORT" "${DEBUG_LEVEL}"
-export_php_fpm__timeout "PHP_FPM_TIMEOUT" "${DEBUG_LEVEL}"
+export_php_fpm_timeout "PHP_FPM_TIMEOUT" "${DEBUG_LEVEL}"
 
 
 ###
