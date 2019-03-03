@@ -7,6 +7,7 @@ LABEL \
 	vendor="devilbox" \
 	license="MIT"
 
+
 ###
 ### Build arguments
 ###
@@ -36,10 +37,8 @@ ENV HTTPD_RELOAD="/usr/local/apache2/bin/httpd -k stop"
 
 
 ###
-### Installation
+### Install required packages
 ###
-
-# required packages
 RUN set -x \
 	&& apt-get update \
 	&& apt-get install --no-install-recommends --no-install-suggests -y \
@@ -80,7 +79,10 @@ RUN set -x \
 		${BUILD_DEPS} \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Add custom config directive to httpd server
+
+###
+### Configure Apache
+###
 RUN set -x \
 	&& ( \
 		echo "ServerName localhost"; \
@@ -107,7 +109,10 @@ RUN set -x \
 		echo "HTTPProtocolOptions unsafe"; \
 	) >> /usr/local/apache2/conf/httpd.conf
 
-# create directories
+
+###
+### Create directories
+###
 RUN set -x \
 	&& mkdir -p /etc/httpd-custom.d \
 	&& mkdir -p /etc/httpd/conf.d \
