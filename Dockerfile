@@ -40,6 +40,11 @@ ENV HTTPD_RELOAD="/usr/local/apache2/bin/httpd -k stop"
 ### Install required packages
 ###
 RUN set -x \
+	&& rm -f /etc/apt/sources.list \
+	&& { \
+		echo "deb http://ftp.debian.org/debian jessie main"; \
+		echo "deb http://security.debian.org/debian-security jessie/updates main"; \
+	} | tee /etc/apt/sources.list \
 	&& apt-get update \
 	&& apt-get install --no-install-recommends --no-install-suggests -y \
 		${BUILD_DEPS} \
