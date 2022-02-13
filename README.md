@@ -263,11 +263,32 @@ It allows any of the following combinations:
 ## Version
 
 ```
-Unable to find image 'devilbox/apache-2.2:latest' locally
-latest: Pulling from devilbox/apache-2.2
-Digest: sha256:cfccd4377265ca0cfea871c192c7d5db2763c176c7550b1d20c6fbd963bb6d3e
-Status: Downloaded newer image for devilbox/apache-2.2:latest
-WARNING: image with reference devilbox/apache-2.2 was found but does not match the specified platform: wanted linux/arm64, actual: linux/amd64
-docker: Error response from daemon: image with reference devilbox/apache-2.2 was found but does not match the specified platform: wanted linux/arm64, actual: linux/amd64.
-See 'docker run --help'.
+Server version: Apache/2.2.34 (Unix)
+Server built:   Jan 18 2018 23:12:10
+Server's Module Magic Number: 20051115:43
+Server loaded:  APR 1.5.1, APR-Util 1.5.4
+Compiled using: APR 1.5.1, APR-Util 1.5.4
+Architecture:   64-bit
+Server MPM:     Prefork
+  threaded:     no
+    forked:     yes (variable process count)
+Server compiled with....
+ -D APACHE_MPM_DIR="server/mpm/prefork"
+ -D APR_HAS_SENDFILE
+ -D APR_HAS_MMAP
+ -D APR_HAVE_IPV6 (IPv4-mapped addresses enabled)
+ -D APR_USE_SYSVSEM_SERIALIZE
+ -D APR_USE_PTHREAD_SERIALIZE
+ -D SINGLE_LISTEN_UNSERIALIZED_ACCEPT
+ -D APR_HAS_OTHER_CHILD
+ -D AP_HAVE_RELIABLE_PIPED_LOGS
+ -D DYNAMIC_MODULE_LIMIT=128
+ -D HTTPD_ROOT="/usr/local/apache2"
+ -D SUEXEC_BIN="/usr/local/apache2/bin/suexec"
+ -D DEFAULT_PIDLOG="logs/httpd.pid"
+ -D DEFAULT_SCOREBOARD="logs/apache_runtime_status"
+ -D DEFAULT_LOCKFILE="logs/accept.lock"
+ -D DEFAULT_ERRORLOG="logs/error_log"
+ -D AP_TYPES_CONFIG_FILE="conf/mime.types"
+ -D SERVER_CONFIG_FILE="conf/httpd.conf"
 ```
