@@ -14,11 +14,11 @@ LABEL \
 ARG VHOST_GEN_GIT_REF=1.0.3
 ARG WATCHERD_GIT_REF=v1.0.2
 ARG CERT_GEN_GIT_REF=0.7
+ARG ARCH
 
 ENV BUILD_DEPS \
 	autoconf \
 	gcc \
-	git \
 	make \
 	wget
 
@@ -36,20 +36,25 @@ ENV MY_GROUP=daemon
 ENV HTTPD_START="httpd-foreground"
 ENV HTTPD_RELOAD="/usr/local/apache2/bin/httpd -k stop"
 
-
 ###
 ### Install required packages
 ###
-RUN set -x \
+RUN set -eux \
 	&& rm -f /etc/apt/sources.list \
 	&& { \
-		echo "deb http://ftp.debian.org/debian jessie main"; \
-		echo "deb http://security.debian.org/debian-security jessie/updates main"; \
+		echo "deb http://deb.debian.org/debian/ stretch main"; \
+		echo "deb http://security.debian.org/debian-security stretch/updates main"; \
 	} | tee /etc/apt/sources.list \
 	&& apt-get update \
 	&& apt-get install --no-install-recommends --no-install-suggests -y \
 		${BUILD_DEPS} \
 		${RUN_DEPS} \
+	\
+	# Required symlinks to build mod-proxy-fcgi on i386
+	&& if [ "${ARCH}" = "linux/386" ]; then \
+		ln -s $(which ar) /usr/bin/i586-linux-gnu-ar; \
+		ln -s $(which ranlib) /usr/bin/i586-linux-gnu-ranlib ; \
+	fi \
 	\
 	# mod-proxy-fcgi
 	&& wget --no-check-certificate -O mod-proxy-fcgi.tar.gz https://github.com/devilbox/mod-proxy-fcgi/archive/master.tar.gz \
@@ -63,9 +68,9 @@ RUN set -x \
 	&& rm -rf mod-proxy-fcgi* \
 	\
 	# Install vhost-gen
-	&& git clone https://github.com/devilbox/vhost-gen \
-	&& cd vhost-gen \
-	&& git checkout "${VHOST_GEN_GIT_REF}" \
+	&& wget --no-check-certificate -O vhost-gen.tar.gz "https://github.com/devilbox/vhost-gen/archive/refs/tags/${VHOST_GEN_GIT_REF}.tar.gz" \
+	&& tar xvfz vhost-gen.tar.gz \
+	&& cd "vhost-gen-${VHOST_GEN_GIT_REF}" \
 	&& make install \
 	&& cd .. \
 	&& rm -rf vhost*gen* \
@@ -81,7 +86,7 @@ RUN set -x \
 	&& chmod +x /usr/bin/watcherd \
 	\
 	# Clean-up
-	&& apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $fetchDeps \
+	&& apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
 		${BUILD_DEPS} \
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -89,7 +94,7 @@ RUN set -x \
 ###
 ### Configure Apache
 ###
-RUN set -x \
+RUN set -eux \
 	&& ( \
 		echo "ServerName localhost"; \
 		echo "LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so"; \
@@ -119,7 +124,7 @@ RUN set -x \
 ###
 ### Create directories
 ###
-RUN set -x \
+RUN set -eux \
 	&& mkdir -p /etc/httpd-custom.d \
 	&& mkdir -p /etc/httpd/conf.d \
 	&& mkdir -p /etc/httpd/vhost.d \
