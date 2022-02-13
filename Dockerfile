@@ -19,7 +19,6 @@ ARG ARCH
 ENV BUILD_DEPS \
 	autoconf \
 	gcc \
-	git \
 	make \
 	wget
 
@@ -69,9 +68,9 @@ RUN set -eux \
 	&& rm -rf mod-proxy-fcgi* \
 	\
 	# Install vhost-gen
-	&& git clone https://github.com/devilbox/vhost-gen \
-	&& cd vhost-gen \
-	&& git checkout "${VHOST_GEN_GIT_REF}" \
+	&& wget --no-check-certificate -O vhost-gen.tar.gz "https://github.com/devilbox/vhost-gen/archive/refs/tags/${VHOST_GEN_GIT_REF}.tar.gz" \
+	&& tar xvfz vhost-gen.tar.gz \
+	&& cd "vhost-gen-${VHOST_GEN_GIT_REF}" \
 	&& make install \
 	&& cd .. \
 	&& rm -rf vhost*gen* \
