@@ -41,7 +41,7 @@ run "docker run -d --rm --platform ${ARCH} \
 ###
 ### Tests
 ###
-run "sleep 5"
+run "sleep 20"  # Startup-time is longer on cross-platform
 run "docker ps"
 run "docker logs ${RAND_NAME}"
 run "curl -sS localhost/index.html"
