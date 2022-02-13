@@ -6,6 +6,7 @@ set -o pipefail
 
 CWD="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 DOCKER_NAME="${1}"
+ARCH="${2}"
 
 
 ###
@@ -26,22 +27,16 @@ run "echo \"<?php echo 'hello world php';\" > ${RAND_DIR}/index.php"
 
 
 ###
-### Build container
-###
-run "docker build -t ${DOCKER_NAME} ${CWD}/.."
-
-
-###
 ### Startup container
 ###
-run "docker run -d --rm \
+run "docker run -d --rm --platform ${ARCH} \
  -v ${RAND_DIR}:/var/www/default/htdocs \
  -e DEBUG_ENTRYPOINT=1 \
  -e NEW_UID=$( id -u ) \
  -e NEW_GID=$( id -g ) \
- --name ${RAND_NAME1} cytopia/php-fpm-5.6"
+ --name ${RAND_NAME1} devilbox/php-fpm-8.1"
 
-run "docker run -d --rm \
+run "docker run -d --rm --platform ${ARCH} \
  -v ${RAND_DIR}:/var/www/default/htdocs \
  -p 127.0.0.1:80:80 \
  -e DEBUG_ENTRYPOINT=2 \
