@@ -66,7 +66,7 @@ lint-workflow:
 # -------------------------------------------------------------------------------------------------
 .PHONY: build
 build:
-	docker build --platform=$(ARCH) $(NO_CACHE) -t $(IMAGE) -f $(DIR)/$(FILE) $(DIR)
+	docker build --platform=$(ARCH) $(NO_CACHE) --build-arg ARCH=$(ARCH) -t $(IMAGE) -f $(DIR)/$(FILE) $(DIR)
 	./build/gen-readme.sh $(IMAGE) $(ARCH)
 
 .PHONY: rebuild
