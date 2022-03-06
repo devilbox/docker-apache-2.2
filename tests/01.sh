@@ -16,8 +16,8 @@ ARCH="${5}"
 ###
 ### Load Library
 ###
-# shellcheck disable=SC1090
-. ${CWD}/.lib.sh
+# shellcheck disable=SC1091
+. "${CWD}/.lib.sh"
 
 
 

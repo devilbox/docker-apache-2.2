@@ -40,7 +40,9 @@ if [ "${#}" -eq "3" ]; then
 # Run all tests
 else
 	for i in "${TESTS[@]}"; do
-		echo "sh -c ${CWD}/${i} ${IMAGE}:${TAG}  ${NAME}-${VERSION} (${ARCH})"
+		echo "################################################################################"
+		echo "# [${CWD}/${i}] ${IMAGE}:${TAG} ${NAME}-${VERSION} (${ARCH})"
+		echo "################################################################################"
 		sh -c "${i} ${IMAGE} ${NAME} ${VERSION} ${TAG} ${ARCH}"
 	done
 fi
