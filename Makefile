@@ -81,7 +81,7 @@ manifest-push: docker-manifest-push
 # -------------------------------------------------------------------------------------------------
 .PHONY: test
 test:
-	./tests/start-ci.sh $(IMAGE) $(ARCH)
+	./tests/start-ci.sh $(IMAGE) $(NAME) $(VERSION) $(DOCKER_TAG) $(ARCH)
 
 .PHONY: update-readme
-	./build/gen-readme.sh $(IMAGE) $(ARCH)
+	./build/gen-readme.sh $(IMAGE) $(NAME) $(VERSION) $(DOCKER_TAG) $(ARCH)
