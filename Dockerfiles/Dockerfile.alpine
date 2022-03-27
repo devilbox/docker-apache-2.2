@@ -1,0 +1,218 @@
+FROM alpine:3.5 as builder
+
+RUN set -eux \
+	&& apk add -U shadow
+
+
+FROM httpd:2.2-alpine
+MAINTAINER "cytopia" <cytopia@everythingcli.org>
+
+LABEL \
+	name="cytopia's apache 2.2 image" \
+	image="devilbox/apache-2.2" \
+	vendor="devilbox" \
+	license="MIT"
+
+
+###
+### Build arguments
+###
+ARG VHOST_GEN_GIT_REF=1.0.3
+ARG WATCHERD_GIT_REF=v1.0.2
+ARG CERT_GEN_GIT_REF=0.7
+ARG ARCH
+
+ENV BUILD_DEPS \
+	autoconf \
+	gcc \
+	musl-dev \
+	make \
+	wget
+
+ENV RUN_DEPS \
+	ca-certificates \
+	bash \
+	openssl \
+	py-yaml \
+	supervisor
+
+
+###
+### Runtime arguments
+###
+ENV MY_USER=daemon
+ENV MY_GROUP=daemon
+ENV HTTPD_START="httpd-foreground"
+ENV HTTPD_RELOAD="/usr/local/apache2/bin/httpd -k stop"
+
+###
+### Install required packages
+###
+RUN set -eux \
+	&& apk add -U \
+		${BUILD_DEPS} \
+		${RUN_DEPS} \
+	\
+	# Required symlinks to build mod-proxy-fcgi on i386
+	&& if [ "${ARCH}" = "linux/386" ]; then \
+		ln -s $(which ar) /usr/bin/i586-linux-gnu-ar; \
+		ln -s $(which ranlib) /usr/bin/i586-linux-gnu-ranlib ; \
+	fi \
+	\
+	# mod-proxy-fcgi
+	&& wget --no-check-certificate -O mod-proxy-fcgi.tar.gz https://github.com/devilbox/mod-proxy-fcgi/archive/master.tar.gz \
+	&& tar xvfz mod-proxy-fcgi.tar.gz \
+	&& cd mod-proxy-fcgi-master \
+	&& autoconf \
+	&& ./configure \
+	&& make \
+	&& make install \
+	&& cd .. \
+	&& rm -rf mod-proxy-fcgi* \
+	\
+	# Install vhost-gen
+	&& wget --no-check-certificate -O vhost-gen.tar.gz "https://github.com/devilbox/vhost-gen/archive/refs/tags/${VHOST_GEN_GIT_REF}.tar.gz" \
+	&& tar xvfz vhost-gen.tar.gz \
+	&& cd "vhost-gen-${VHOST_GEN_GIT_REF}" \
+	&& make install \
+	&& cd .. \
+	&& rm -rf vhost*gen* \
+	\
+	# Install cert-gen
+	&& wget --no-check-certificate -O /usr/bin/ca-gen https://raw.githubusercontent.com/devilbox/cert-gen/${CERT_GEN_GIT_REF}/bin/ca-gen \
+	&& wget --no-check-certificate -O /usr/bin/cert-gen https://raw.githubusercontent.com/devilbox/cert-gen/${CERT_GEN_GIT_REF}/bin/cert-gen \
+	&& chmod +x /usr/bin/ca-gen \
+	&& chmod +x /usr/bin/cert-gen \
+	\
+	# Install watcherd
+	&& wget --no-check-certificate -O /usr/bin/watcherd https://raw.githubusercontent.com/devilbox/watcherd/${WATCHERD_GIT_REF}/watcherd \
+	&& chmod +x /usr/bin/watcherd \
+	\
+	# Clean-up
+	&& apk del \
+		${BUILD_DEPS}
+
+
+###
+### Configure Apache
+###
+RUN set -eux \
+	&& ( \
+		echo "ServerName localhost"; \
+		echo "LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so"; \
+		echo "NameVirtualHost *:80"; \
+		echo "Include conf/extra/httpd-default.conf"; \
+		echo "Include /etc/httpd-custom.d/*.conf"; \
+		echo "Include /etc/httpd/conf.d/*.conf"; \
+		echo "Include /etc/httpd/vhost.d/*.conf"; \
+		\
+		#echo "LoadModule ssl_module modules/mod_ssl.so"; \
+		echo "Listen 443"; \
+		echo "NameVirtualHost *:443"; \
+		echo "SSLCipherSuite HIGH:MEDIUM:!MD5:!RC4:!3DES"; \
+		echo "SSLProxyCipherSuite HIGH:MEDIUM:!MD5:!RC4:!3DES"; \
+		echo "SSLHonorCipherOrder on"; \
+		echo "SSLProtocol all -SSLv2 -SSLv3"; \
+		echo "SSLProxyProtocol all -SSLv2 -SSLv3"; \
+		echo "SSLPassPhraseDialog  builtin"; \
+		echo "SSLSessionCache        \"shmcb:/usr/local/apache2/logs/ssl_scache(512000)\""; \
+		echo "SSLSessionCacheTimeout  300"; \
+		echo "SSLMutex  \"file:/usr/local/apache2/logs/ssl_mutex\""; \
+		\
+		echo "HTTPProtocolOptions unsafe"; \
+	) >> /usr/local/apache2/conf/httpd.conf
+
+
+###
+### Create directories
+###
+RUN set -eux \
+	&& mkdir -p /etc/httpd-custom.d \
+	&& mkdir -p /etc/httpd/conf.d \
+	&& mkdir -p /etc/httpd/vhost.d \
+	&& mkdir -p /var/www/default/htdocs \
+	&& mkdir -p /shared/httpd \
+	&& chmod 0775 /shared/httpd \
+	&& chown ${MY_USER}:${MY_GROUP} /shared/httpd
+
+
+###
+### Copy files
+###
+COPY ./data/vhost-gen/main.yml /etc/vhost-gen/main.yml
+COPY ./data/vhost-gen/mass.yml /etc/vhost-gen/mass.yml
+COPY ./data/create-vhost.sh /usr/local/bin/create-vhost.sh
+COPY ./data/docker-entrypoint.d /docker-entrypoint.d
+COPY ./data/docker-entrypoint.sh /docker-entrypoint.sh
+
+
+###
+### Backporting from Alpine 3.5
+###
+# Required for usermod and groupmod
+COPY --from=builder /etc/pam.d                 /etc/pam.d
+COPY --from=builder /etc/security              /etc/security
+COPY --from=builder /etc/login.defs            /etc/login.defs
+
+COPY --from=builder /lib/security              /lib/security
+COPY --from=builder /lib/libpam.so.0           /lib/libpam.so.0
+COPY --from=builder /lib/libpam.so.0.84.1      /lib/libpam.so.0.84.1
+COPY --from=builder /lib/libpam_misc.so.0      /lib/libpam_misc.so.0
+COPY --from=builder /lib/libpam_misc.so.0.82.1 /lib/libpam_misc.so.0.82.1
+COPY --from=builder /lib/libpamc.so.0          /lib/libpamc.so.0
+COPY --from=builder /lib/libpamc.so.0.82.1     /lib/libpamc.so.0.82.1
+
+#COPY --from=builder /usr/bin/faillog           /usr/bin/faillog
+#COPY --from=builder /usr/bin/gpasswd           /usr/bin/gpasswd
+#COPY --from=builder /usr/bin/sg                /usr/bin/sg
+#COPY --from=builder /usr/bin/chfn              /usr/bin/chfn
+#COPY --from=builder /usr/bin/newgrp            /usr/bin/newgrp
+#COPY --from=builder /usr/bin/chsh              /usr/bin/chsh
+#COPY --from=builder /usr/bin/lastlog           /usr/bin/lastlog
+#COPY --from=builder /usr/bin/chage             /usr/bin/chage
+#COPY --from=builder /usr/bin/expiry            /usr/bin/expiry
+#COPY --from=builder /usr/sbin/newusers         /usr/sbin/newusers
+#COPY --from=builder /usr/sbin/pwconv           /usr/sbin/pwconv
+#COPY --from=builder /usr/sbin/groupmems        /usr/sbin/groupmems
+#COPY --from=builder /usr/sbin/vipw             /usr/sbin/vipw
+COPY --from=builder /usr/sbin/usermod          /usr/sbin/usermod
+#COPY --from=builder /usr/sbin/grpconv          /usr/sbin/grpconv
+#COPY --from=builder /usr/sbin/useradd          /usr/sbin/useradd
+COPY --from=builder /usr/sbin/groupmod         /usr/sbin/groupmod
+#COPY --from=builder /usr/sbin/grpck            /usr/sbin/grpck
+#COPY --from=builder /usr/sbin/userdel          /usr/sbin/userdel
+#COPY --from=builder /usr/sbin/groupdel         /usr/sbin/groupdel
+#COPY --from=builder /usr/sbin/pwck             /usr/sbin/pwck
+#COPY --from=builder /usr/sbin/pwunconv         /usr/sbin/pwunconv
+#COPY --from=builder /usr/sbin/chgpasswd        /usr/sbin/chgpasswd
+#COPY --from=builder /usr/sbin/logoutd          /usr/sbin/logoutd
+#COPY --from=builder /usr/sbin/grpunconv        /usr/sbin/grpunconv
+#COPY --from=builder /usr/sbin/vigr             /usr/sbin/vigr
+#COPY --from=builder /usr/sbin/groupadd         /usr/sbin/groupadd
+#COPY --from=builder /bin/groups                /bin/groups
+
+
+###
+### Ports
+###
+EXPOSE 80
+EXPOSE 443
+
+
+###
+### Volumes
+###
+VOLUME /shared/httpd
+VOLUME /ca
+
+
+###
+### Signals
+###
+STOPSIGNAL SIGTERM
+
+
+###
+### Entrypoint
+###
+ENTRYPOINT ["/docker-entrypoint.sh"]
