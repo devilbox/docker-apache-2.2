@@ -1,0 +1,312 @@
+# The contents have been copied from offial Apache 2.2.x Dockerfile
+# https://github.com/docker-library/httpd/blob/49d553ae79f1b42ba541714c4e611aec5eefdfa8/2.2/alpine/Dockerfile
+
+# -------------------------------------------------------------------------------------------------
+# Official Apache Image
+# -------------------------------------------------------------------------------------------------
+
+# this cannot upgrade to Alpine 3.5 due to https://github.com/libressl-portable/portable/issues/147
+# given that 2.2.x is a "legacy branch", and is in security-fixes-only mode upstream, this should be reasonably fine
+#   "Minimal maintenance patches of 2.2.x are expected throughout this period, and users are strongly encouraged to promptly complete their transitions to the the 2.4.x flavour of httpd to benefit from a much larger assortment of minor security and bug fixes as well as new features."
+# https://httpd.apache.org/
+FROM alpine:3.4 as offical
+
+# ensure www-data user exists
+RUN set -x \
+	&& addgroup -g 82 -S www-data \
+	&& adduser -u 82 -D -S -G www-data www-data
+# 82 is the standard uid/gid for "www-data" in Alpine
+# http://git.alpinelinux.org/cgit/aports/tree/main/apache2/apache2.pre-install?h=v3.3.2
+# http://git.alpinelinux.org/cgit/aports/tree/main/lighttpd/lighttpd.pre-install?h=v3.3.2
+# http://git.alpinelinux.org/cgit/aports/tree/main/nginx-initscripts/nginx-initscripts.pre-install?h=v3.3.2
+
+ENV HTTPD_PREFIX /usr/local/apache2
+ENV PATH $HTTPD_PREFIX/bin:$PATH
+RUN mkdir -p "$HTTPD_PREFIX" \
+	&& chown www-data:www-data "$HTTPD_PREFIX"
+WORKDIR $HTTPD_PREFIX
+
+ENV HTTPD_VERSION 2.2.34
+ENV HTTPD_SHA256 e53183d5dfac5740d768b4c9bea193b1099f4b06b57e5f28d7caaf9ea7498160
+
+# https://httpd.apache.org/security/vulnerabilities_22.html
+ENV HTTPD_PATCHES="CVE-2017-9798-patch-2.2.patch 42c610f8a8f8d4d08664db6d9857120c2c252c9b388d56f238718854e6013e46 2.2.x-mod_proxy-without-APR_HAS_THREADS.patch beb66a79a239f7e898311c5ed6a38c070c641ec56706a295b7e5caf3c55a7296"
+
+ENV APACHE_DIST_URLS \
+# https://issues.apache.org/jira/browse/INFRA-8753?focusedCommentId=14735394#comment-14735394
+	https://www.apache.org/dyn/closer.cgi?action=download&filename= \
+# if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
+	https://www-us.apache.org/dist/ \
+	https://www.apache.org/dist/ \
+	https://archive.apache.org/dist/
+
+# see https://httpd.apache.org/docs/2.2/install.html#requirements
+RUN set -eux; \
+	\
+	runDeps=' \
+		apr-dev \
+		apr-util-dev \
+		apr-util-ldap \
+		perl \
+	'; \
+	apk add --no-cache --virtual .build-deps \
+		$runDeps \
+		ca-certificates \
+		coreutils \
+		dpkg-dev dpkg \
+		gcc \
+		gnupg \
+		libc-dev \
+		make \
+		openssl \
+		openssl-dev \
+		pcre-dev \
+		tar \
+# install GNU wget (Busybox wget in Alpine 3.4 gives us "wget: error getting response: Connection reset by peer" for some reason)
+		wget \
+	; \
+	\
+	ddist() { \
+		local f="$1"; shift; \
+		local distFile="$1"; shift; \
+		local success=; \
+		local distUrl=; \
+		for distUrl in $APACHE_DIST_URLS; do \
+			if wget -O "$f" "$distUrl$distFile"; then \
+				success=1; \
+				break; \
+			fi; \
+		done; \
+		[ -n "$success" ]; \
+	}; \
+	\
+	ddist 'httpd.tar.bz2' "httpd/httpd-$HTTPD_VERSION.tar.bz2"; \
+	echo "$HTTPD_SHA256 *httpd.tar.bz2" | sha256sum -c -; \
+	\
+# see https://httpd.apache.org/download.cgi#verify
+	ddist 'httpd.tar.bz2.asc' "httpd/httpd-$HTTPD_VERSION.tar.bz2.asc"; \
+	export GNUPGHOME="$(mktemp -d)"; \
+	#gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B1B96F45DFBDCCF974019235193F180AB55D9977; \
+	#gpg --batch --verify httpd.tar.bz2.asc httpd.tar.bz2; \
+	rm -rf "$GNUPGHOME" httpd.tar.bz2.asc; \
+	\
+	mkdir -p src; \
+	tar -xf httpd.tar.bz2 -C src --strip-components=1; \
+	rm httpd.tar.bz2; \
+	cd src; \
+	\
+	patches() { \
+		while [ "$#" -gt 0 ]; do \
+			local patchFile="$1"; shift; \
+			local patchSha256="$1"; shift; \
+			ddist "$patchFile" "httpd/patches/apply_to_$HTTPD_VERSION/$patchFile"; \
+			echo "$patchSha256 *$patchFile" | sha256sum -c -; \
+			patch -p0 < "$patchFile"; \
+			rm -f "$patchFile"; \
+		done; \
+	}; \
+	patches $HTTPD_PATCHES; \
+	\
+	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
+	./configure \
+		--build="$gnuArch" \
+		--prefix="$HTTPD_PREFIX" \
+# https://httpd.apache.org/docs/2.2/programs/configure.html
+# Caveat: --enable-mods-shared=all does not actually build all modules. To build all modules then, one might use:
+		--enable-mods-shared='all ssl ldap cache proxy authn_alias mem_cache file_cache authnz_ldap charset_lite dav_lock disk_cache' \
+	; \
+	make -j "$(nproc)"; \
+	make install; \
+	\
+	cd ..; \
+	rm -r src man manual; \
+	\
+	sed -ri \
+		-e 's!^(\s*CustomLog)\s+\S+!\1 /proc/self/fd/1!g' \
+		-e 's!^(\s*ErrorLog)\s+\S+!\1 /proc/self/fd/2!g' \
+		"$HTTPD_PREFIX/conf/httpd.conf"; \
+	\
+	runDeps="$runDeps $( \
+		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
+			| tr ',' '\n' \
+			| sort -u \
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+	)"; \
+	apk add --virtual .httpd-rundeps $runDeps; \
+	apk del .build-deps
+
+COPY httpd-foreground /usr/local/bin/
+
+EXPOSE 80
+CMD ["httpd-foreground"]
+
+
+# -------------------------------------------------------------------------------------------------
+# Official Devilbox image
+# -------------------------------------------------------------------------------------------------
+FROM official as final
+MAINTAINER "cytopia" <cytopia@everythingcli.org>
+
+LABEL \
+	name="cytopia's apache 2.2 image" \
+	image="devilbox/apache-2.2" \
+	vendor="devilbox" \
+	license="MIT"
+
+
+###
+### Build arguments
+###
+ARG VHOST_GEN_GIT_REF=1.0.3
+ARG WATCHERD_GIT_REF=v1.0.2
+ARG CERT_GEN_GIT_REF=0.7
+ARG ARCH
+
+ENV BUILD_DEPS \
+	autoconf \
+	gcc \
+	make \
+	wget
+
+ENV RUN_DEPS \
+	ca-certificates \
+	bash \
+	openssl \
+	py3-yaml \
+	shadow \
+	supervisor
+
+
+###
+### Runtime arguments
+###
+ENV MY_USER=daemon
+ENV MY_GROUP=daemon
+ENV HTTPD_START="httpd-foreground"
+ENV HTTPD_RELOAD="/usr/local/apache2/bin/httpd -k stop"
+
+###
+### Install required packages
+###
+RUN set -eux \
+	&& apk add --no-cache \
+		${BUILD_DEPS} \
+		${RUN_DEPS} \
+	\
+	# Required symlinks to build mod-proxy-fcgi on i386
+	&& if [ "${ARCH}" = "linux/386" ]; then \
+		ln -s $(which ar) /usr/bin/i586-linux-gnu-ar; \
+		ln -s $(which ranlib) /usr/bin/i586-linux-gnu-ranlib ; \
+	fi \
+	\
+	# mod-proxy-fcgi
+	&& wget --no-check-certificate -O mod-proxy-fcgi.tar.gz https://github.com/devilbox/mod-proxy-fcgi/archive/master.tar.gz \
+	&& tar xvfz mod-proxy-fcgi.tar.gz \
+	&& cd mod-proxy-fcgi-master \
+	&& autoconf \
+	&& ./configure \
+	&& make \
+	&& make install \
+	&& cd .. \
+	&& rm -rf mod-proxy-fcgi* \
+	\
+	# Install vhost-gen
+	&& wget --no-check-certificate -O vhost-gen.tar.gz "https://github.com/devilbox/vhost-gen/archive/refs/tags/${VHOST_GEN_GIT_REF}.tar.gz" \
+	&& tar xvfz vhost-gen.tar.gz \
+	&& cd "vhost-gen-${VHOST_GEN_GIT_REF}" \
+	&& make install \
+	&& cd .. \
+	&& rm -rf vhost*gen* \
+	\
+	# Install cert-gen
+	&& wget --no-check-certificate -O /usr/bin/ca-gen https://raw.githubusercontent.com/devilbox/cert-gen/${CERT_GEN_GIT_REF}/bin/ca-gen \
+	&& wget --no-check-certificate -O /usr/bin/cert-gen https://raw.githubusercontent.com/devilbox/cert-gen/${CERT_GEN_GIT_REF}/bin/cert-gen \
+	&& chmod +x /usr/bin/ca-gen \
+	&& chmod +x /usr/bin/cert-gen \
+	\
+	# Install watcherd
+	&& wget --no-check-certificate -O /usr/bin/watcherd https://raw.githubusercontent.com/devilbox/watcherd/${WATCHERD_GIT_REF}/watcherd \
+	&& chmod +x /usr/bin/watcherd \
+	\
+	# Clean-up
+	&& apk del \
+		${BUILD_DEPS}
+
+
+###
+### Configure Apache
+###
+RUN set -eux \
+	&& ( \
+		echo "ServerName localhost"; \
+		echo "LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so"; \
+		echo "NameVirtualHost *:80"; \
+		echo "Include conf/extra/httpd-default.conf"; \
+		echo "Include /etc/httpd-custom.d/*.conf"; \
+		echo "Include /etc/httpd/conf.d/*.conf"; \
+		echo "Include /etc/httpd/vhost.d/*.conf"; \
+		\
+		#echo "LoadModule ssl_module modules/mod_ssl.so"; \
+		echo "Listen 443"; \
+		echo "NameVirtualHost *:443"; \
+		echo "SSLCipherSuite HIGH:MEDIUM:!MD5:!RC4:!3DES"; \
+		echo "SSLProxyCipherSuite HIGH:MEDIUM:!MD5:!RC4:!3DES"; \
+		echo "SSLHonorCipherOrder on"; \
+		echo "SSLProtocol all -SSLv2 -SSLv3"; \
+		echo "SSLProxyProtocol all -SSLv2 -SSLv3"; \
+		echo "SSLPassPhraseDialog  builtin"; \
+		echo "SSLSessionCache        \"shmcb:/usr/local/apache2/logs/ssl_scache(512000)\""; \
+		echo "SSLSessionCacheTimeout  300"; \
+		echo "SSLMutex  \"file:/usr/local/apache2/logs/ssl_mutex\""; \
+		\
+		echo "HTTPProtocolOptions unsafe"; \
+	) >> /usr/local/apache2/conf/httpd.conf
+
+
+###
+### Create directories
+###
+RUN set -eux \
+	&& mkdir -p /etc/httpd-custom.d \
+	&& mkdir -p /etc/httpd/conf.d \
+	&& mkdir -p /etc/httpd/vhost.d \
+	&& mkdir -p /var/www/default/htdocs \
+	&& mkdir -p /shared/httpd \
+	&& chmod 0775 /shared/httpd \
+	&& chown ${MY_USER}:${MY_GROUP} /shared/httpd
+
+
+###
+### Copy files
+###
+COPY ./data/vhost-gen/main.yml /etc/vhost-gen/main.yml
+COPY ./data/vhost-gen/mass.yml /etc/vhost-gen/mass.yml
+COPY ./data/create-vhost.sh /usr/local/bin/create-vhost.sh
+COPY ./data/docker-entrypoint.d /docker-entrypoint.d
+COPY ./data/docker-entrypoint.sh /docker-entrypoint.sh
+
+
+###
+### Ports
+###
+EXPOSE 80
+EXPOSE 443
+
+
+###
+### Volumes
+###
+VOLUME /shared/httpd
+VOLUME /ca
+
+
+###
+### Signals
+###
+STOPSIGNAL SIGTERM
+
+
+###
+### Entrypoint
+###
+ENTRYPOINT ["/docker-entrypoint.sh"]
