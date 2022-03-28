@@ -34,7 +34,8 @@ ENV RUN_DEPS \
 	bash \
 	openssl \
 	py-yaml \
-	supervisor
+	supervisor \
+	tzdata
 
 
 ###
