@@ -32,6 +32,7 @@ ENV BUILD_DEPS \
 ENV RUN_DEPS \
 	ca-certificates \
 	bash \
+	findutils \
 	openssl \
 	py-yaml \
 	supervisor \
