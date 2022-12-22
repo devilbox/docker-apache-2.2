@@ -22,7 +22,7 @@ env:
         "NAME":    "Apache",
         "VERSION": ["2.2"],
         "FLAVOUR": ["latest", "alpine"],
-        "ARCH":    ["linux/amd64", "linux/386"]
+        "ARCH":    ["linux/amd64"]
       }
     ]
 

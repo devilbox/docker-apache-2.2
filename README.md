@@ -62,7 +62,7 @@ The following Docker image tags are rolling releases and are built and updated e
 
 | Docker Tag                       | Git Ref      |  Available Architectures                      |
 |----------------------------------|--------------|-----------------------------------------------|
-| **[`latest`][tag_latest]**       | master       |  `amd64`, `i386`                              |
+| **[`latest`][tag_latest]**       | master       |  `amd64`                                      |
 | [`debian`][tag_debian]           | master       |  `amd64`, `i386`, `arm64`, `arm/v7`, `arm/v6` |
 | [`alpine`][tag_alpine]           | master       |  `amd64`, `i386`                              |
 
@@ -75,7 +75,7 @@ The following Docker image tags are built once and can be used for reproducible 
 
 | Docker Tag                       | Git Ref      |  Available Architectures                      |
 |----------------------------------|--------------|-----------------------------------------------|
-| **[`<tag>`][tag_latest]**        | git: `<tag>` |  `amd64`, `i386`                              |
+| **[`<tag>`][tag_latest]**        | git: `<tag>` |  `amd64`                                      |
 | [`<tag>-debian`][tag_debian]     | git: `<tag>` |  `amd64`, `i386`, `arm64`, `arm/v7`, `arm/v6` |
 | [`<tag>-alpine`][tag_alpine]     | git: `<tag>` |  `amd64`, `i386`                              |
 
