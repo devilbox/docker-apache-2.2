@@ -1,3 +1,4 @@
+# vi: ft=dockerfile
 FROM alpine:3.5 as builder
 
 RUN set -eux \
@@ -17,9 +18,9 @@ LABEL \
 ###
 ### Build arguments
 ###
-ARG VHOST_GEN_GIT_REF=1.0.3
-ARG WATCHERD_GIT_REF=v1.0.2
-ARG CERT_GEN_GIT_REF=0.7
+ARG VHOST_GEN_GIT_REF=1.0.6
+ARG WATCHERD_GIT_REF=v1.0.7
+ARG CERT_GEN_GIT_REF=0.10
 ARG ARCH
 
 ENV BUILD_DEPS \
@@ -38,14 +39,6 @@ ENV RUN_DEPS \
 	supervisor \
 	tzdata
 
-
-###
-### Runtime arguments
-###
-ENV MY_USER=daemon
-ENV MY_GROUP=daemon
-ENV HTTPD_START="httpd-foreground"
-ENV HTTPD_RELOAD="/usr/local/apache2/bin/httpd -k stop"
 
 ###
 ### Install required packages
@@ -87,7 +80,7 @@ RUN set -eux \
 	&& chmod +x /usr/bin/cert-gen \
 	\
 	# Install watcherd
-	&& wget --no-check-certificate -O /usr/bin/watcherd https://raw.githubusercontent.com/devilbox/watcherd/${WATCHERD_GIT_REF}/watcherd \
+	&& wget --no-check-certificate -O /usr/bin/watcherd https://raw.githubusercontent.com/devilbox/watcherd/${WATCHERD_GIT_REF}/bin/watcherd \
 	&& chmod +x /usr/bin/watcherd \
 	\
 	# Clean-up
@@ -126,6 +119,17 @@ RUN set -eux \
 
 
 ###
+### Runtime arguments
+###
+ENV MY_USER=daemon
+ENV MY_GROUP=daemon
+ENV HTTPD_START="httpd-foreground"
+ENV HTTPD_RELOAD="/usr/local/apache2/bin/httpd -k stop"
+ENV HTTPD_VERSION="httpd -V 2>&1 | head -1 | awk '{print \$3}'"
+ENV VHOSTGEN_HTTPD_SERVER="apache22"
+
+
+###
 ### Create directories
 ###
 RUN set -eux \
@@ -133,19 +137,36 @@ RUN set -eux \
 	&& mkdir -p /etc/httpd/conf.d \
 	&& mkdir -p /etc/httpd/vhost.d \
 	&& mkdir -p /var/www/default/htdocs \
+	&& mkdir -p /var/log/httpd \
 	&& mkdir -p /shared/httpd \
 	&& chmod 0775 /shared/httpd \
 	&& chown ${MY_USER}:${MY_GROUP} /shared/httpd
 
 
 ###
+### Symlink Python3 to Python
+###
+RUN set -eux \
+	&& ln -sf /usr/bin/python2 /usr/bin/python
+
+
+###
+### Set timezone
+###
+RUN set -eux \
+	&& if [ -f /etc/localtime ]; then rm /etc/localtime; fi \
+	&& ln -s /usr/share/zoneinfo/UTC /etc/localtime
+
+
+###
 ### Copy files
 ###
-COPY ./data/vhost-gen/main.yml /etc/vhost-gen/main.yml
-COPY ./data/vhost-gen/mass.yml /etc/vhost-gen/mass.yml
+COPY ./data/vhost-gen/templates-main /etc/vhost-gen/templates-main
 COPY ./data/create-vhost.sh /usr/local/bin/create-vhost.sh
+
 COPY ./data/docker-entrypoint.d /docker-entrypoint.d
 COPY ./data/docker-entrypoint.sh /docker-entrypoint.sh
+
 
 
 ###
