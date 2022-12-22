@@ -25,9 +25,8 @@ The provided Docker images have a lot of injectables in order to customize it to
    <code><a href="#-timezone" >TIMEZONE</a></code><br/>
   </td>
   <td>
-   <strong>Nginx</strong><br/>
-   <code><a href="#-worker_connections" >WORKER_CONNECTIONS</a></code><br/>
-   <code><a href="#-worker_processes" >WORKER_PROCESSES</a></code><br/>
+   <strong>Apache 2.2</strong><br/>
+   -
   </td>
  </tr>
  <tr valign="top" style="vertical-align:top">
@@ -610,27 +609,3 @@ Globally enable/disable `HTTP2` protocol.
 
 When set to `1`, all virtual hosts will allow the HTTP2 protocol.
 When set to `0`, all virtual hosts will disallow the HTTP2 protocol.
-
-
-
-## ∑ `WORKER_CONNECTIONS`
-
-Set Nginx worker.connections.
-
-* **Default:** `1024`
-* **Allowed:** valid number
-* **Var type:** `integer`
-
-See Nginx documentation: [worker_connections](https://nginx.org/en/docs/ngx_core_module.html#worker_connections).
-
-
-
-## ∑ `WORKER_PROCESSES`
-
-Set Nginx worker.processes.
-
-* **Default:** `auto`
-* **Allowed:** valid value
-* **Var type:** `string` or `int`
-
-See Nginx documentation: [worker_processes](https://nginx.org/en/docs/ngx_core_module.html#worker_processes).
