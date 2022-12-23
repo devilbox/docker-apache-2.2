@@ -62,7 +62,6 @@ The provided Docker images have a lot of injectables in order to customize it to
   <td>
    <strong>All Vhosts</strong><br/>
    <code><a href="#-docker_logs" >DOCKER_LOGS</a></code><br/>
-   <code><a href="#-http2_enable" >HTTP2_ENABLE</a></code><br/>
   </td>
  </tr>
 </table>
@@ -596,16 +595,3 @@ This variable controls whether webserver access and error logs are written to a 
 By default (value: `1`) all Docker images are configured to output their webserver access and error logs to stdout and stderr, which means it is shown by `docker logs` (or `docker-compose logs`).
 
 If you want to log into files inside the container instead, change it to `0`. The respective log files are available in `/var/log/httpd/` and can be mounted to your local file system so you can `cat`, `tail` or `grep` them for anything interesting.
-
-
-
-## ∑ `HTTP2_ENABLE`
-
-Globally enable/disable `HTTP2` protocol.
-
-* **Default:** `1`
-* **Allowed:** `0` or `1`
-* **Var type:** `bool`
-
-When set to `1`, all virtual hosts will allow the HTTP2 protocol.
-When set to `0`, all virtual hosts will disallow the HTTP2 protocol.

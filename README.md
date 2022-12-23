@@ -19,8 +19,6 @@ This image is based on the official **[Apache 2.2](https://hub.docker.com/_/http
 
 From a users perspective, you mount your local project directory into the container under `/shared/httpd`. Any directory then created in your local project directory wil spawn a new virtual host by the same name. Each virtual host optionally supports a generic or custom backend configuration (**static files**, **PHP-FPM** or **reverse proxy**).
 
-**HTTP/2 is enabled by default for all SSL connections.**
-
 For convenience the entrypoint script during `docker run` provides a pretty decent **validation and documentation** about wrong user input and suggests steps to fix it.
 
 | <img style="height: 180px;" height="180" src="doc/img/httpd-backend-invalid-type.png" /> | <img style="height: 180px;" height="180" src="doc/img/httpd-backend-unsupported.png" /> | <img style="height: 180px;" height="180" src="doc/img/httpd-alias-validation.png" /> | <img style="height: 180px;" height="180" src="doc/img/httpd-valid.png" /> |
@@ -143,9 +141,8 @@ The provided Docker images add a lot of injectables in order to customize it to 
    <code><a href="doc/environment-variables.md#-timezone" >TIMEZONE</a></code><br/>
   </td>
   <td>
-   <strong>Nginx</strong><br/>
-   <code><a href="doc/environment-variables.md#-worker_connections" >WORKER_CONNECTIONS</a></code><br/>
-   <code><a href="doc/environment-variables.md#-worker_processes" >WORKER_PROCESSES</a></code><br/>
+   <strong>Apache</strong><br/>
+   -
   </td>
  </tr>
  <tr valign="top" style="vertical-align:top">
@@ -181,7 +178,6 @@ The provided Docker images add a lot of injectables in order to customize it to 
   <td>
    <strong>All Vhosts</strong><br/>
    <code><a href="doc/environment-variables.md#-docker_logs" >DOCKER_LOGS</a></code><br/>
-   <code><a href="doc/environment-variables.md#-http2_enable" >HTTP2_ENABLE</a></code><br/>
   </td>
  </tr>
 </table>
