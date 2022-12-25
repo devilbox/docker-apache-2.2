@@ -15,13 +15,13 @@ env:
       {
         "NAME":    "Apache",
         "VERSION": ["2.2"],
-        "FLAVOUR": ["latest", "debian"],
+        "FLAVOUR": ["debian"],
         "ARCH":    ["linux/amd64", "linux/386", "linux/arm64", "linux/arm/v7", "linux/arm/v6"]
       },
       {
         "NAME":    "Apache",
         "VERSION": ["2.2"],
-        "FLAVOUR": ["alpine"],
+        "FLAVOUR": ["latest", "alpine"],
         "ARCH":    ["linux/amd64"]
       }
     ]
