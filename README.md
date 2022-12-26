@@ -17,7 +17,7 @@
 
 This image is based on the official **[Apache 2.2](https://hub.docker.com/_/httpd)** Docker image and extends it with the ability to have **virtual hosts created automatically**, as well as **adding SSL certificates** when creating new directories. For that to work, it integrates two tools that will take care about the whole process: **[watcherd](https://github.com/devilbox/watcherd)** and **[vhost-gen](https://github.com/devilbox/vhost-gen)**.
 
-From a users perspective, you mount your local project directory into the container under `/shared/httpd`. Any directory then created in your local project directory wil spawn a new virtual host by the same name. Each virtual host optionally supports a generic or custom backend configuration (**static files**, **PHP-FPM** or **reverse proxy**).
+From a users perspective, you mount your local project directory into the container under `/shared/httpd`. Any directory then created in your local project directory wil spawn a new virtual host by the same name. Each virtual host optionally supports a generic or custom backend configuration: **static files**, **PHP-FPM** or **reverse proxy**.
 
 For convenience the entrypoint script during `docker run` provides a pretty decent **validation and documentation** about wrong user input and suggests steps to fix it.
 
